@@ -1,0 +1,46 @@
+config-version: 1
+language: en_US
+
+motd:
+  entries:
+    - id: default
+      line1: "<gradient:#00FF87:#60EFFF><bold>SERVER</bold></gradient> <dark_gray>»</dark_gray> <gray>{motd_line}"
+      line2: "<gray>Online: <white>{online}/{max}</white> · TPS <white>{tps}</white>"
+      text: "A friendly survival server"
+      icon: "server-icon.png"
+  schedule:
+    - days: [SATURDAY, SUNDAY]
+      time: "00:00-23:59"
+      entry: default
+
+maintenance:
+  enabled: false
+  line1: "<red><bold>MAINTENANCE</bold></red>"
+  line2: "<gray>Please try again later."
+  kick: "<red>The server is under maintenance."
+  ip-whitelist: []
+
+hover:
+  enabled: true
+  lines:
+    - "<aqua>mMotd</aqua>"
+    - "<gray>{online}/{max} players"
+
+players:
+  mode: actual
+  offset: 0
+  fixed-online: 0
+  fixed-max: 100
+
+version:
+  override: false
+  label: "Waiting for 26.2"
+  protocol: -1
+
+metrics:
+  enabled: true
+  bstats-id: 33358
+
+updates:
+  enabled: true
+  modrinth-project-id: "mMotd"

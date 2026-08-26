@@ -1,0 +1,26 @@
+name: mMotd
+version: ${version}
+main: io.github.miklires.mmotd.MMotd
+api-version: '26.2'
+author: miklires
+description: Cached and scheduled server-list MOTDs
+folia-supported: true
+
+commands:
+  mmotd:
+    description: Manage mMotd
+    usage: /mmotd <reload|preview|maintenance>
+
+permissions:
+  mmotd.admin:
+    description: All mMotd administration permissions
+    default: op
+    children:
+      mmotd.command.reload: true
+      mmotd.command.preview: true
+      mmotd.command.maintenance: true
+      mmotd.maintenance.bypass: true
+  mmotd.command.reload: { default: op }
+  mmotd.command.preview: { default: op }
+  mmotd.command.maintenance: { default: op }
+  mmotd.maintenance.bypass: { default: op }

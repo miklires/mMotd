@@ -1,0 +1,7 @@
+prefix: "<aqua><bold>mMotd</bold></aqua> <dark_gray>»</dark_gray> "
+no-permission: "<red>У вас нет прав."
+reloaded: "<green>Конфигурация и иконки перезагружены."
+reload-error: "<red>Ошибка перезагрузки: <gray>{error}"
+usage: "<yellow>Использование: <white>/mmotd <reload|preview|maintenance on|off>"
+maintenance: "<green>Режим обслуживания: <white>{state}</white>."
+preview-header: "<gray>Текущий MOTD:"

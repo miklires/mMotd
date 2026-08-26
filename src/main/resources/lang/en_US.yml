@@ -1,0 +1,7 @@
+prefix: "<aqua><bold>mMotd</bold></aqua> <dark_gray>»</dark_gray> "
+no-permission: "<red>You do not have permission."
+reloaded: "<green>Configuration and icons reloaded."
+reload-error: "<red>Reload failed: <gray>{error}"
+usage: "<yellow>Usage: <white>/mmotd <reload|preview|maintenance on|off>"
+maintenance: "<green>Maintenance mode is now <white>{state}</white>."
+preview-header: "<gray>Current server-list preview:"
