@@ -2,6 +2,7 @@ name: release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -10,15 +11,46 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
+        if: github.event_name == 'push'
         with:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v6
-      - run: ./gradlew clean build --no-daemon
-      - run: ./gradlew modrinth --no-daemon
+        if: github.event_name == 'push'
+      - if: github.event_name == 'push'
+        run: ./gradlew clean build --no-daemon
+      - if: github.event_name == 'push'
+        run: ./gradlew modrinth --no-daemon
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
       - uses: softprops/action-gh-release@v3
+        if: github.event_name == 'push'
         with:
           files: build/libs/mMotd-1.0.0.jar
+      - name: Update Modrinth page and submit for review
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
+        run: |
+          jq -n --rawfile body README.md '{
+            title: "mMotd",
+            description: "Fast, cached and scheduled server MOTDs with maintenance controls for Paper, Purpur and Folia.",
+            body: $body,
+            categories: ["management", "utility"],
+            issues_url: "https://github.com/miklires/mMotd/issues",
+            source_url: "https://github.com/miklires/mMotd",
+            wiki_url: "https://miklires.su/wiki/mmotd",
+            discord_url: "https://discord.gg/pes25cnWKy",
+            donation_urls: [{id: "other", platform: "Support", url: "https://miklires.su/support"}],
+            license_id: "MIT",
+            requested_status: "approved"
+          }' > project.json
+          code=$(curl --silent --show-error --output response.json --write-out '%{http_code}' \
+            --request PATCH "https://api.modrinth.com/v2/project/$MODRINTH_PROJECT_ID" \
+            --header "Authorization: $MODRINTH_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data-binary @project.json)
+          test "$code" = "204" || { cat response.json; exit 1; }
+          echo "Modrinth project metadata updated and review requested."
