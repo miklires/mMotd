@@ -1,17 +1,30 @@
-config-version: 1
+# mMotd ships with safe defaults and validates every entry before replacing the live cache.
+config-version: 2
+
+# Bundled languages: en_US and ru_RU. English is the default.
 language: en_US
+
+# Use "system" or an IANA zone such as Europe/Moscow.
+time-zone: system
 
 motd:
   entries:
     - id: default
+      weight: 1
+      audience: ANY # ANY, FIRST, or RETURNING (FIRST/RETURNING require analytics.enabled)
+      hosts: [] # Example: ["play.example.com", "*.example.net"]
+      protocol: { min: -1, max: -1 }
       line1: "<gradient:#00FF87:#60EFFF><bold>SERVER</bold></gradient> <dark_gray>»</dark_gray> <gray>{motd_line}"
       line2: "<gray>Online: <white>{online}/{max}</white> · TPS <white>{tps}</white>"
       text: "A friendly survival server"
-      icon: "server-icon.png"
+      # icon: "server-icon.png" # Relative to plugins/mMotd; must be a 64x64 PNG.
+
+  # The highest-priority matching window wins. Equal priorities keep file order.
   schedule:
     - days: [SATURDAY, SUNDAY]
       time: "00:00-23:59"
       entry: default
+      priority: 10
 
 maintenance:
   enabled: false
@@ -19,6 +32,14 @@ maintenance:
   line2: "<gray>Please try again later."
   kick: "<red>The server is under maintenance."
   ip-whitelist: []
+  # icon: "maintenance.png"
+
+# Displayed automatically while the built-in server whitelist is enabled.
+whitelist-motd:
+  enabled: true
+  line1: "<yellow><bold>WHITELIST ENABLED</bold></yellow>"
+  line2: "<gray>The server is currently private."
+  # icon: "whitelist.png"
 
 hover:
   enabled: true
@@ -27,6 +48,7 @@ hover:
     - "<gray>{online}/{max} players"
 
 players:
+  # actual, offset, fixed, or hidden
   mode: actual
   offset: 0
   fixed-online: 0
@@ -37,10 +59,26 @@ version:
   label: "Waiting for 26.2"
   protocol: -1
 
+# Optional event countdown. Example: 2026-12-31T18:00:00+03:00
+countdown:
+  target: ""
+
+cache:
+  refresh-ticks: 20
+  # Bukkit's offline-player list is intentionally refreshed less often.
+  unique-player-refresh-seconds: 60
+
+# Privacy-first local analytics. Disabled by default, never persisted or sent externally.
+# Addresses are stored only as salted SHA-256 hashes in memory and expire after the TTL.
+analytics:
+  enabled: false
+  address-ttl-minutes: 1440
+  max-unique-addresses: 10000
+
 metrics:
   enabled: true
   bstats-id: 33358
 
 updates:
   enabled: true
-  modrinth-project-id: "mMotd"
+  modrinth-project-id: "mmotd"

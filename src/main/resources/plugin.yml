@@ -9,7 +9,7 @@ folia-supported: true
 commands:
   mmotd:
     description: Manage mMotd
-    usage: /mmotd <reload|preview|maintenance>
+    usage: /mmotd <reload|preview|maintenance|stats>
 
 permissions:
   mmotd.admin:
@@ -19,8 +19,10 @@ permissions:
       mmotd.command.reload: true
       mmotd.command.preview: true
       mmotd.command.maintenance: true
+      mmotd.command.stats: true
       mmotd.maintenance.bypass: true
   mmotd.command.reload: { default: op }
   mmotd.command.preview: { default: op }
   mmotd.command.maintenance: { default: op }
+  mmotd.command.stats: { default: op }
   mmotd.maintenance.bypass: { default: op }

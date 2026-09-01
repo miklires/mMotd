@@ -12,22 +12,44 @@ public final class MMotd extends JavaPlugin {
     private MotdManager manager;
     private MessageBundle messages;
     private ScheduledTask refreshTask;
-    @Override public void onEnable() {
+
+    @Override
+    public void onEnable() {
         saveDefaultConfig();
-        saveBundledLanguage("en_US"); saveBundledLanguage("ru_RU");
         messages = new MessageBundle(this);
         manager = new MotdManager(this);
-        try { manager.reload(); } catch (Exception e) { getLogger().severe("Could not load MOTD configuration: " + e.getMessage()); getServer().getPluginManager().disablePlugin(this); return; }
+        try {
+            MotdManager.LoadReport report = manager.reload();
+            messages.reload();
+            getLogger().info("Loaded " + report.entries() + " MOTD entry(s), " + report.schedules()
+                    + " schedule(s), " + report.skipped() + " skipped item(s).");
+        } catch (Exception error) {
+            getLogger().severe("Could not load MOTD configuration: " + error.getMessage());
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         getServer().getPluginManager().registerEvents(new MotdListener(this), this);
         MotdCommand command = new MotdCommand(this);
-        if (getCommand("mmotd") != null) { getCommand("mmotd").setExecutor(command); getCommand("mmotd").setTabCompleter(command); }
-        refreshTask = getServer().getGlobalRegionScheduler().runAtFixedRate(this, task -> manager.refresh(), 20L, 20L);
-        if (getConfig().getBoolean("metrics.enabled", true) && getConfig().getInt("metrics.bstats-id", 0) > 0) new Metrics(this, getConfig().getInt("metrics.bstats-id"));
-        if (getConfig().getBoolean("updates.enabled", true)) UpdateChecker.checkAsync(this, getConfig().getString("updates.modrinth-project-id", ""));
+        if (getCommand("mmotd") != null) {
+            getCommand("mmotd").setExecutor(command);
+            getCommand("mmotd").setTabCompleter(command);
+        }
+        long refreshTicks = Math.max(20L, Math.min(1_200L, getConfig().getLong("cache.refresh-ticks", 20L)));
+        refreshTask = getServer().getGlobalRegionScheduler().runAtFixedRate(this, task -> manager.refresh(), refreshTicks, refreshTicks);
+        if (getConfig().getBoolean("metrics.enabled", true) && getConfig().getInt("metrics.bstats-id", 0) > 0) {
+            new Metrics(this, getConfig().getInt("metrics.bstats-id"));
+        }
+        if (getConfig().getBoolean("updates.enabled", true)) {
+            UpdateChecker.checkAsync(this, getConfig().getString("updates.modrinth-project-id", ""));
+        }
         getLogger().info("mMotd " + getPluginMeta().getVersion() + " enabled.");
     }
-    @Override public void onDisable() { if (refreshTask != null) refreshTask.cancel(); }
-    private void saveBundledLanguage(String locale) { String path = "lang/" + locale + ".yml"; if (!new java.io.File(getDataFolder(), path).exists()) saveResource(path, false); }
+
+    @Override
+    public void onDisable() {
+        if (refreshTask != null) refreshTask.cancel();
+    }
+
     public MotdManager manager() { return manager; }
     public MessageBundle messages() { return messages; }
 }
