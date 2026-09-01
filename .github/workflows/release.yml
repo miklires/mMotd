@@ -9,7 +9,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
         if: github.event_name == 'push'
         with:
@@ -21,19 +21,21 @@ jobs:
         run: ./gradlew clean build --no-daemon
       - if: github.event_name == 'push'
         run: ./gradlew modrinth --no-daemon
+        continue-on-error: true
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
       - uses: softprops/action-gh-release@v3
         if: github.event_name == 'push'
         with:
-          files: build/libs/mMotd-1.0.0.jar
+          files: build/libs/mMotd-1.1.0.jar
       - name: Update Modrinth page and submit for review
         if: github.event_name == 'workflow_dispatch'
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
         run: |
+          set -euo pipefail
           jq -n --rawfile body README.md '{
             title: "mMotd",
             description: "Fast, cached and scheduled server MOTDs with maintenance controls for Paper, Purpur and Folia.",
@@ -53,4 +55,9 @@ jobs:
             --header "Content-Type: application/json" \
             --data-binary @project.json)
           test "$code" = "204" || { cat response.json; exit 1; }
+          disclosure=$(jq -nc '{set:[{type:"telemetry",consent:"opt_out",data_collected:["Anonymous server usage statistics through bStats"]}],remove:[]}')
+          curl --fail-with-body -sS --request PATCH "https://api.modrinth.com/v3/project/$MODRINTH_PROJECT_ID/disclosures" \
+            --header "Authorization: $MODRINTH_TOKEN" --header "Content-Type: application/json" --data "$disclosure"
+          curl --fail-with-body -sS --header "Authorization: $MODRINTH_TOKEN" \
+            "https://api.modrinth.com/v2/project/$MODRINTH_PROJECT_ID" | jq '{id,slug,title,status,requested_status,body_length:(.body|length),source_url,issues_url,wiki_url,discord_url,license}'
           echo "Modrinth project metadata updated and review requested."
