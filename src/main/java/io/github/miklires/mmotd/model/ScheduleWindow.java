@@ -7,14 +7,20 @@ import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Set;
 
-public record ScheduleWindow(Set<DayOfWeek> days, LocalTime start, LocalTime end, String entryId) {
+public record ScheduleWindow(Set<DayOfWeek> days, LocalTime start, LocalTime end, String entryId, int priority) {
     public static ScheduleWindow parse(Iterable<String> days, String range, String entryId) {
+        return parse(days, range, entryId, 0);
+    }
+
+    public static ScheduleWindow parse(Iterable<String> days, String range, String entryId, int priority) {
         EnumSet<DayOfWeek> parsedDays = EnumSet.noneOf(DayOfWeek.class);
         for (String day : days) parsedDays.add(DayOfWeek.valueOf(day.toUpperCase(Locale.ROOT)));
         if (parsedDays.isEmpty()) parsedDays = EnumSet.allOf(DayOfWeek.class);
         String[] parts = range.split("-", -1);
         if (parts.length != 2) throw new IllegalArgumentException("time must be HH:mm-HH:mm");
-        return new ScheduleWindow(Set.copyOf(parsedDays), LocalTime.parse(parts[0]), LocalTime.parse(parts[1]), entryId);
+        if (entryId == null || entryId.isBlank()) throw new IllegalArgumentException("entry is required");
+        if (priority < -10_000 || priority > 10_000) throw new IllegalArgumentException("priority is out of range");
+        return new ScheduleWindow(Set.copyOf(parsedDays), LocalTime.parse(parts[0]), LocalTime.parse(parts[1]), entryId, priority);
     }
 
     public boolean matches(LocalDateTime now) {
